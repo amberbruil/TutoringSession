@@ -1,0 +1,56 @@
+﻿@model TutoringSession.Models.Session
+@{
+    ViewData["Title"] = "Log Tutoring Session";
+}
+
+<h2>Log Tutoring Session</h2>
+<form asp-action="Index" method="post" class="mt-3">
+    <div class="mb-3">
+        <label asp-for="LecturerName" class="form-label">Lecturer Full Name</label>
+        <input asp-for="LecturerName" class="form-control"/>
+        <span asp-validation-for="LecturerName" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="StudentName" class="form-label">Student Full Name</label>
+        <input asp-for="StudentName" class="form-control"/>
+        <span asp-validation-for="StudentName" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="SessionDate" class="form-label">Session Date</label>
+        <input asp-for="SessionDate" class="form-control" type="date" />
+        <span asp-validation-for="SessionDate" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="HoursTutored" class="form-label">Total Hours Tutored</label>
+        <input asp-for="HoursTutored" class="form-control" step="0.5"/>
+        <span asp-validation-for="HoursTutored" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="HourlyRate" class="form-label">Hourly Rate</label>
+        <input asp-for="HourlyRate" class="form-control" step="0.01" />
+        <span asp-validation-for="HourlyRate" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Calculate</button>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+@{
+    ViewData["Title"] = "Session Summary";
+}
+
+<h2>Session Summary</h2>
+<table class="table table-bordered table-striped mt-3">
+    <tr><th>Lecturer</th><td>@TempData["Lecturer"]</td></tr>
+    <tr><th>Student</th><td>@TempData["Student"]</td></tr>
+    <tr><th>Date</th><td>@TempData["Date"]</td></tr>
+    <tr><th>Hours</th><td>@TempData["Hours"]</td></tr>
+    <tr><th>Rate (R/h)</th><td>R @TempData["Rate"]</td></tr>
+    <tr class="table-success"><th>Total</th><td><b>R @TempData["Total"]</b></td></tr>
+</table>
+<a asp-controller="Session" asp-action="Index" class="btn btn-secondary">Log Another</a>
