@@ -17,7 +17,7 @@ namespace TutoringSession.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Index(Session model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
                 // Redisplay form with validation errors
                 return View(model);

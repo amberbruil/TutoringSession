@@ -1,0 +1,17 @@
+﻿@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+@{
+    ViewData["Title"] = "Session Summary";
+}
+
+<h2>Session Summary</h2>
+<table class="table table-bordered table-striped mt-3">
+    <tr><th>Lecturer</th><td>@TempData["Lecturer"]</td></tr>
+    <tr><th>Student</th><td>@TempData["Student"]</td></tr>
+    <tr><th>Date</th><td>@TempData["Date"]</td></tr>
+    <tr><th>Hours</th><td>@TempData["Hours"]</td></tr>
+    <tr><th>Rate (R/h)</th><td>R @TempData["Rate"]</td></tr>
+    <tr class="table-success"><th>Total</th><td><b>R @TempData["Total"]</b></td></tr>
+</table>
+<a asp-controller="Session" asp-action="Index" class="btn btn-secondary">Log Another</a>
