@@ -26,5 +26,8 @@ namespace TutoringSession.Models
         public DateTime SessionDate { get; set; } = DateTime.Today;
 
         public decimal CalculateEarnings() => (decimal)HoursTutored * HourlyRate;
+
+        // Calculated by the API, not from the client
+        public decimal FeeAmount { get; set; }
     }
 }

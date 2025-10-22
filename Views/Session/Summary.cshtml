@@ -1,17 +1,16 @@
-﻿@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+﻿@model TutoringSession.Dtos.SessionReadDto
 @{
-    ViewData["Title"] = "Session Summary";
+    ViewData["Title"] = "Tutoring Session Summary";
 }
 
-<h2>Session Summary</h2>
-<table class="table table-bordered table-striped mt-3">
-    <tr><th>Lecturer</th><td>@TempData["Lecturer"]</td></tr>
-    <tr><th>Student</th><td>@TempData["Student"]</td></tr>
-    <tr><th>Date</th><td>@TempData["Date"]</td></tr>
-    <tr><th>Hours</th><td>@TempData["Hours"]</td></tr>
-    <tr><th>Rate (R/h)</th><td>R @TempData["Rate"]</td></tr>
-    <tr class="table-success"><th>Total</th><td><b>R @TempData["Total"]</b></td></tr>
-</table>
-<a asp-controller="Session" asp-action="Index" class="btn btn-secondary">Log Another</a>
+<h2>Tutoring Session Summary</h2>
+<div class="card p-3">
+    <p><strong>Lecturer:</strong> @Model.LecturerName</p>
+    <p><strong>Student:</strong> @Model.StudentName</p>
+    <p><strong>Hours Tutored:</strong> @Model.HoursTutored</p>
+    <p><strong>Hourly Rate:</strong> @Model.HourlyRate</p>
+    <p><strong>Session Date:</strong> @Model.SessionDate.ToShortDateString()</p>
+    <p><strong>Calculated Fee:</strong> <span class="text-success">@Model.FeeAmount</span></p>
+</div>
+
+<a asp-action="Index" class="btn btn-secondary">New Session</a>
