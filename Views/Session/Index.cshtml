@@ -1,48 +1,126 @@
-﻿@model TutoringSession.Models.Session
+﻿@model TutoringSession.Controllers.SessionVm
 @{
     ViewData["Title"] = "Create Tutoring Session";
 }
 
-<h2>Create Tutoring Session</h2>
+<h2 class="mb-3">Create Tutoring Session</h2>
 
-<form asp-action="Index" asp-controller="Session" method="post">
-    @Html.AntiForgeryToken()
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
+<form id="sessionForm" onsubmit="return false">
     <div class="mb-3">
         <label asp-for="LecturerName" class="form-label"></label>
         <input asp-for="LecturerName" class="form-control" />
-        <span asp-validation-for="LecturerName" class="text-danger"></span>
+        <span class="text-danger" data-valmsg-for="LecturerName"></span>
     </div>
 
     <div class="mb-3">
         <label asp-for="StudentName" class="form-label"></label>
         <input asp-for="StudentName" class="form-control" />
-        <span asp-validation-for="StudentName" class="text-danger"></span>
+        <span class="text-danger" data-valmsg-for="StudentName"></span>
     </div>
 
     <div class="mb-3">
         <label asp-for="SessionDate" class="form-label"></label>
         <input asp-for="SessionDate" class="form-control" type="date" />
-        <span asp-validation-for="SessionDate" class="text-danger"></span>
+        <span class="text-danger" data-valmsg-for="SessionDate"></span>
     </div>
 
     <div class="mb-3">
         <label asp-for="HoursTutored" class="form-label"></label>
-        <input asp-for="HoursTutored" class="form-control" />
-        <span asp-validation-for="HoursTutored" class="text-danger"></span>
+        <input asp-for="HoursTutored" class="form-control" step="0.5" min="0.5" max="24" />
+        <span class="text-danger" data-valmsg-for="HoursTutored"></span>
     </div>
 
     <div class="mb-3">
-        <label asp-for="HourlyRate" class="form-label"></label>
-        <input asp-for="HourlyRate" class="form-control" />
-        <span asp-validation-for="HourlyRate" class="text-danger"></span>
+        <label class="form-label">Live Fee Preview</label>
+        <input id="feePreview" class="form-control" value="0.00" readonly />
+        <div class="form-text">This preview is client-side; the API recalculates and validates on submit.</div>
     </div>
 
-    <button type="submit" class="btn btn-primary">Calculate</button>
+    <button id="btnCalculate" type="button" class="btn btn-primary">Calculate & Continue</button>
 </form>
 
 @section Scripts {
-    <!-- client-side validation; in default template these libs exist -->
-    <partial name="_ValidationScriptsPartial" />
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <script>
+        $("#sessionForm").on("submit", function (e) { e.preventDefault(); });
+
+        // Simple client-side preview & validation
+        const HOURLY_RATE = 200.0;
+
+        function showError(name, message) {
+            $(`[data-valmsg-for='${name}']`).text(message || "");
+        }
+
+        function clearErrors() {
+            ["LecturerName", "StudentName", "SessionDate", "HoursTutored"].forEach(n => showError(n, ""));
+        }
+
+        function readForm() {
+            return {
+                LecturerName: $.trim($("input[name='LecturerName']").val()),
+                StudentName: $.trim($("input[name='StudentName']").val()),
+                SessionDate: $("input[name='SessionDate']").val(),
+                HoursTutored: parseFloat($("input[name='HoursTutored']").val())
+            };
+        }
+
+        function validate(form) {
+            let ok = true;
+            clearErrors();
+
+            if (!form.LecturerName) { showError("LecturerName", "Lecturer name is required."); ok = false; }
+            if (!form.StudentName) { showError("StudentName", "Student name is required."); ok = false; }
+            if (!form.SessionDate) { showError("SessionDate", "Session date is required."); ok = false; }
+            if (!form.HoursTutored || form.HoursTutored <= 0) { showError("HoursTutored", "Hours must be greater than 0."); ok = false; }
+
+            return ok;
+        }
+
+        function updatePreview() {
+            const hours = parseFloat($("input[name='HoursTutored']").val()) || 0;
+            const fee = hours * HOURLY_RATE;
+            $("#feePreview").val(fee.toFixed(2));
+        }
+
+        $("input[name='HoursTutored']").on("input", updatePreview);
+        $(document).ready(updatePreview);
+
+        $("#btnCalculate").on("click", function () {
+            const payload = readForm();
+            if (!validate(payload)) return;
+
+            $.ajax({
+                url: "/api/session/calculate",
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(payload)
+            })
+            .done(function (data) {
+                // data is SessionReadDto from API
+                const q = new URLSearchParams({
+                    LecturerName: data.lecturerName,
+                    StudentName: data.studentName,
+                    SessionDate: data.sessionDate.substring(0, 10),
+                    HoursTutored: data.hoursTutored,
+                    HourlyRate: data.hourlyRate,
+                    FeeAmount: data.feeAmount
+                }).toString();
+
+                // Redirect to Summary with query-string
+                window.location.href = "/Session/Summary?" + q;
+            })
+            .fail(function (xhr) {
+                // Map API validation errors to the form
+                clearErrors();
+                if (xhr.status === 400 && xhr.responseJSON && xhr.responseJSON.errors) {
+                    const errs = xhr.responseJSON.errors;
+                    Object.keys(errs).forEach(k => showError(k, errs[k][0]));
+                } else {
+                    alert("An unexpected error occurred.");
+                }
+            });
+        });
+
+    </script>
 }

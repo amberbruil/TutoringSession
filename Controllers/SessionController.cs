@@ -1,77 +1,128 @@
-﻿using System.Net.Http.Json;
-using Microsoft.AspNetCore.Mvc;
-using TutoringSession.Dtos;
-using TutoringSession.Models;
+﻿using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
+using System.Net.Http.Json;
+using TutoringSession.Dtos; // make sure this matches your namespace
 
 namespace TutoringSession.Controllers
 {
     public class SessionController : Controller
     {
-        // Inject IHttpClientFactory to create HttpClient instances
         private readonly IHttpClientFactory _http;
-        public SessionController(IHttpClientFactory http) => _http = http;
 
+        public SessionController(IHttpClientFactory http)
+        {
+            _http = http;
+        }
+
+        // Display the input form
         [HttpGet]
-        public IActionResult Index() => View(new Session());
+        public IActionResult Index() => View(new SessionVm());
 
-        /// <summary>
-        /// Process form submission to create a new tutoring session.
-        /// SessionCreateDto is sent to the API. 
-        /// SessionReadDto is returned from the API.
-        /// </summary>
-        /// <param name="model"></param>
-        /// <returns></returns>
+        // Handle form submission and call Micro API
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Index(Session model)
+        public async Task<IActionResult> Index(SessionVm vm)
         {
-            if (!ModelState.IsValid) 
-                return View(model);
+            if (!ModelState.IsValid)
+                return View(vm);
 
-            // --- Call the API to create the session record ---
-            var create = new SessionCreateDto
+            var client = _http.CreateClient("SessionsApi");
+
+            // Map SessionVm to SessionCreateDto
+            var createDto = new SessionCreateDto
             {
-                LecturerName = model.LecturerName,
-                StudentName = model.StudentName,
-                HoursTutored = model.HoursTutored,
-                HourlyRate = model.HourlyRate,
-                SessionDate = model.SessionDate
+                LecturerName = vm.LecturerName,
+                StudentName = vm.StudentName,
+                SessionDate = vm.SessionDate,
+                HoursTutored = vm.HoursTutored,
+                HourlyRate = vm.HourlyRate
             };
 
-            var client = _http.CreateClient(); // create HttpClient object to send web request
-            var baseUrl = $"{Request.Scheme}://{Request.Host}"; // build base URL for API
-            var resp = await client.PostAsJsonAsync($"{baseUrl}/api/sessions", create); // send POST request
-            // ---
-
-            // Handle API errors
-            if (!resp.IsSuccessStatusCode)
+            // Send to Micro API (MapPost endpoint)
+            var response = await client.PostAsJsonAsync("/api/sessions", createDto);
+            if (!response.IsSuccessStatusCode)
             {
-                ModelState.AddModelError("", $"API error: {(int)resp.StatusCode} {resp.ReasonPhrase}");
-                return View(model);
+                ModelState.AddModelError("", "Failed to create tutoring session.");
+                return View(vm);
             }
 
-            var created = await resp.Content.ReadFromJsonAsync<SessionReadDto>();
-            if (created == null)
+            // Read the API response (SessionReadDto)
+            var readDto = await response.Content.ReadFromJsonAsync<SessionReadDto>();
+            if (readDto is null)
             {
-                ModelState.AddModelError("", "API returned empty response.");
-                return View(model);
+                ModelState.AddModelError("", "Invalid response from API.");
+                return View(vm);
             }
-            // ---
 
-            // Redirect to Summary view to display created
-            return View("Summary", created);
+            // Map SessionReadDto to SummaryVm
+            var summaryVm = new SummaryVm
+            {
+                LecturerName = readDto.LecturerName,
+                StudentName = readDto.StudentName,
+                SessionDate = readDto.SessionDate,
+                HoursTutored = readDto.HoursTutored, 
+                HourlyRate = readDto.HourlyRate,
+                FeeAmount = readDto.FeeAmount
+            };
+
+            // strongly typed ViewModel to Summary view
+            return View("Summary", summaryVm);
         }
 
-        /// <summary>
-        /// Display summary of created tutoring session.
-        /// SessionReadDto is retrieved from the API.
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
+        // Display Summary view directly if navigated with existing model
         [HttpGet]
-        public async Task<IActionResult> Summary(SessionReadDto dto)
+        public IActionResult Summary(SummaryVm vm)
         {
-            return View(dto);
+            if (string.IsNullOrWhiteSpace(vm.LecturerName))
+                return RedirectToAction(nameof(Index));
+
+            return View(vm);
         }
+    }
+
+    // -------------------- VIEW MODELS --------------------
+    /// <summary>
+    /// ViewModel for tutoring session input form
+    /// </summary>
+    public class SessionVm
+    {
+        [Required]
+        [Display(Name = "Lecturer Name")]
+        public string LecturerName { get; set; } = string.Empty;
+
+        [Required]
+        [Display(Name = "Student Name")]
+        public string StudentName { get; set; } = string.Empty;
+
+        [Required]
+        [DataType(DataType.Date)]
+        [Display(Name = "Session Date")]
+        public DateTime SessionDate { get; set; } = DateTime.Today;
+
+        [Required]
+        [Range(0.5, 12, ErrorMessage = "Hours must be between 0.5 and 12.")]
+        [Display(Name = "Hours Tutored")]
+        public double HoursTutored { get; set; } = 0.5;
+
+        [Required]
+        [Range(50, 200, ErrorMessage = "Hourly rate must be between R50 and R200.")]
+        [Display(Name = "Hourly Rate (R)")]
+        public decimal HourlyRate { get; set; }
+
+        // client-side live preview
+        public decimal PreviewFee { get; set; }
+    }
+
+    /// <summary>
+    /// ViewModel for tutoring session summary
+    /// </summary>
+    public class SummaryVm
+    {
+        public string LecturerName { get; set; } = string.Empty;
+        public string StudentName { get; set; } = string.Empty;
+        public DateTime SessionDate { get; set; }
+        public double HoursTutored { get; set; }
+        public decimal HourlyRate { get; set; }
+        public decimal FeeAmount { get; set; }
     }
 }

@@ -20,14 +20,12 @@ namespace TutoringSession.Dtos
         public DateTime SessionDate { get; set; }
     }
 
-    public class SessionReadDto
-    {
-        public int Id { get; set; }
-        public string LecturerName { get; set; } = string.Empty;
-        public string StudentName { get; set; } = string.Empty;
-        public double HoursTutored { get; set; }
-        public decimal HourlyRate { get; set; }
-        public DateTime SessionDate { get; set; }
-        public decimal FeeAmount { get; set; }
-    }
+    public record SessionReadDto(
+        int Id,
+        string LecturerName,
+        string StudentName,
+        DateTime SessionDate,
+        double HoursTutored,
+        decimal HourlyRate,
+        decimal FeeAmount);
 }
