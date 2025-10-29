@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using System.Net.Http.Json;
-using TutoringSession.Dtos; // make sure this matches your namespace
+using TutoringSession.Dtos;
 
 namespace TutoringSession.Controllers
 {
