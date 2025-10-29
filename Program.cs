@@ -6,6 +6,12 @@ using TutoringSession.Models;
 using TutoringSession.Dtos;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddHttpContextAccessor();
+
+// ------------------------------
+// Session State Management
+// ------------------------------
+builder.Services.AddSession();
 
 // ------------------------------
 // MVC (for Razor Views)
@@ -65,12 +71,14 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
+app.UseSession(); // Session middleware
+
 // ------------------------------
 // MVC Route
 // ------------------------------
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Session}/{action=Index}/{id?}");
+    pattern: "{controller=Auth}/{action=Login}/{id?}");
     
 // ------------------------------
 // Minimal API endpoint

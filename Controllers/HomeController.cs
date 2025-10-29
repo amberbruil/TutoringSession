@@ -6,27 +6,14 @@ namespace TutoringSession.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
-
-        public HomeController(ILogger<HomeController> logger)
+        public IActionResult StudentPage()
         {
-            _logger = logger;
-        }
+            // Use session to check if user is logged in and is a Student
+            var role = HttpContext.Session.GetString("Role");
+            if (role != "Student")
+                return RedirectToAction("Login", "Auth");
 
-        public IActionResult Index()
-        {
             return View();
-        }
-
-        public IActionResult Privacy()
-        {
-            return View();
-        }
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
     }
 }

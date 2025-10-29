@@ -16,7 +16,17 @@ namespace TutoringSession.Controllers
 
         // Display the input form
         [HttpGet]
-        public IActionResult Index() => View(new SessionVm());
+        public IActionResult Index()
+        {
+            // Check if user is logged in and is a Tutor using session
+            var role = HttpContext.Session.GetString("Role");
+            if (role != "Tutor")
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            return View(new SessionVm());
+        }
 
         // Handle form submission and call Micro API
         [HttpPost]
@@ -73,6 +83,11 @@ namespace TutoringSession.Controllers
         [HttpGet]
         public IActionResult Summary(SummaryVm vm)
         {
+            // Check if user is logged in and is a Tutor using session
+            var role = HttpContext.Session.GetString("Role");
+            if (!string.Equals(role, "Tutor", StringComparison.OrdinalIgnoreCase))
+                return RedirectToAction("Login", "Auth");
+
             if (string.IsNullOrWhiteSpace(vm.LecturerName))
                 return RedirectToAction(nameof(Index));
 

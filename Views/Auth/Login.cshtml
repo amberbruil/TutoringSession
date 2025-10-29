@@ -1,0 +1,25 @@
+﻿@model TutoringSession.Controllers.LoginVM
+@{
+    ViewData["Title"] = "Login";
+}
+
+<h2>Login</h2>
+<form asp-action="Login" asp-controller="Auth" method="post">
+    @Html.AntiForgeryToken()
+
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="Id" class="form-label"></label>
+        <input asp-for="Id" class="form-control" />
+        <span asp-validation-for="Id" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Password" class="form-label"></label>
+        <input asp-for="Password" class="form-control" type="password" />
+        <span asp-validation-for="Password" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Sign in</button>
+</form>
